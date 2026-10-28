@@ -16,8 +16,7 @@ CREATE TABLE tasks (
 
 ); 
 
-CREATE or REPLACE 
-FUNCTION update_states_check()
+CREATE or REPLACE FUNCTION update_states_check()
 RETURNS TRIGGER 
 AS $$
 BEGIN 
@@ -36,10 +35,10 @@ BEGIN
     END IF;
     RAISE EXCEPTION 'Invalid task status transition from "%" to "%"', OLD.status, NEW.status;
 END;
-$$ LANGUAGE plpgsql
+$$ LANGUAGE plpgsql; 
 
 CREATE TRIGGER state_check
 BEFORE UPDATE OF status ON tasks 
 FOR EACH ROW
 EXECUTE FUNCTION
-update_states_check()
+update_states_check(); 
