@@ -1,0 +1,164 @@
+1. Connect to E2B
+
+Responsibility:
+
+Authenticate with E2B using API key.
+Create a client object that the rest of your code can reuse.
+Go
+func NewE2BClient() (*e2b.Client, error)
+
+What it does:
+
+Plain Text
+Read API key
+↓
+Create E2B client
+↓
+Return client
+
+Usage:
+
+Go
+client, err := NewE2BClient()
+
+
+2. Create a Sandbox Environment
+
+Responsibility:
+
+Start a fresh sandbox.
+Return sandbox ID/instance.
+Go
+func CreateSandbox(ctx context.Context, client *e2b.Client) (*e2b.Sandbox, error)
+
+What it does:
+
+Plain Text
+Request new sandbox
+↓
+Wait until ready
+↓
+Return sandbox instance
+
+Usage:
+
+Go
+sandbox, err := CreateSandbox(ctx, client)
+3. Execute Terminal Command and Wait for Result
+
+This is usually the most important function.
+
+Responsibility:
+
+Send command to sandbox terminal.
+Wait until execution finishes.
+Return stdout/stderr.
+Go
+func RunCommand(
+ctx context.Context,
+sandbox *e2b.Sandbox,
+command string,
+) (string, string, error)
+
+Return values:
+
+Go
+stdout
+stderr
+error
+
+Flow:
+
+Plain Text
+User command
+↓
+Send to sandbox
+↓
+Execute
+↓
+Wait for completion
+↓
+Return output
+
+Example:
+
+Go
+stdout, stderr, err :=
+RunCommand(ctx, sandbox, "ls -la")
+
+Could return:
+
+Plain Text
+stdout:
+file1.txt
+file2.txt
+ 
+stderr:
+(empty)
+4. Safely Remove Sandbox
+
+Responsibility:
+
+Always clean up resources.
+Avoid abandoned sandboxes.
+Go
+func DeleteSandbox(
+ctx context.Context,
+sandbox *e2b.Sandbox,
+) error
+
+Flow:
+
+Plain Text
+Sandbox exists
+↓
+Terminate sandbox
+↓
+Release resources
+↓
+Done
+
+Usage:
+
+Go
+defer DeleteSandbox(ctx, sandbox)
+
+Using defer is common because cleanup is guaranteed even if execution fails halfway through.
+
+Production Version
+
+In a real service I would typically create these 4 functions:
+
+Go
+func NewE2BClient() (*e2b.Client, error)
+ 
+func CreateSandbox(
+ctx context.Context,
+client *e2b.Client,
+) (*e2b.Sandbox, error)
+ 
+func RunCommand(
+ctx context.Context,
+sandbox *e2b.Sandbox,
+command string,
+) (string, string, error)
+ 
+func DeleteSandbox(
+ctx context.Context,
+sandbox *e2b.Sandbox,
+) error
+
+Then your REST API handler becomes very simple:
+
+Plain Text
+POST /tasks
+↓
+CreateSandbox()
+↓
+RunCommand()
+↓
+Store output
+↓
+DeleteSandbox()
+
+Thinking about your Echo project, these four functions would likely live inside an e2b package, while your API gateway and workers would call them rather than talking to the E2B SDK directly. This keeps the SDK details isolated in one place.
