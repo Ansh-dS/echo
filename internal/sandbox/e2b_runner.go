@@ -46,8 +46,8 @@ func (c *E2BClient) CreateSandbox(ctx context.Context) (*Sandbox, error) {
 	return &Sandbox{instance: sbx}, nil
 }
 
-// CommandsToSandbox executes a shell command inside the sandbox terminal and returns stdout, stderr, and any error.
-func (s *Sandbox) commandsOutput(ctx context.Context, command string) (string, string, error) {
+// CommandsOutput executes a shell command inside the sandbox terminal and returns stdout, stderr, and any error.
+func (s *Sandbox) CommandsOutput(ctx context.Context, command string) (string, string, error) {
 	if s.instance == nil {
 		return "", "", errors.New("sandbox instance is not initialized")
 	}
